@@ -80,12 +80,17 @@
 
 ---
 
-## Fase 10 — Mobile 📱
-- [ ] Tela Cardápio (lista por categoria, busca)
-- [ ] Scanner QR Code da mesa (expo-camera)
-- [ ] Tela Novo Pedido mobile (carrinho nativo)
-- [ ] Notificações push (expo-notifications: pedido pronto → garçom)
-- [ ] Tela KDS mobile para chapeiro
+## Fase 10 — Mobile ✅
+- [x] Dashboard com KPIs reais e ações rápidas por papel
+- [x] Scanner QR Code da mesa (expo-camera + CameraView)
+- [x] Tela Novo Pedido: cardápio por categoria + carrinho nativo
+- [x] Lista de pedidos com filtros por status + FAB novo pedido
+- [x] Detalhes do pedido: avanço de status por item e por pedido
+- [x] KDS mobile para chapeiro com polling 10s, fundo escuro, urgência visual
+- [x] Zustand carrinhoStore para estado do carrinho entre telas
+- [x] Serviços: cardapioService, mesaService, pedidoService
+- [x] Componentes: LoadingView, EmptyView, StatusBadge
+- [ ] Notificações push (expo-notifications: requer EAS Build)
 
 ---
 
