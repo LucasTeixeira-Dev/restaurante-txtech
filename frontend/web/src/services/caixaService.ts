@@ -3,17 +3,17 @@ import type { Caixa } from '@/types'
 
 export const caixaService = {
   listar: (): Promise<Caixa[]> =>
-    api.get('/caixas').then((r) => r.data.data ?? r.data),
+    api.get('/caixa').then((r) => r.data.data ?? r.data),
 
   atual: (): Promise<Caixa | null> =>
-    api.get('/caixas/atual').then((r) => r.data.data ?? r.data).catch(() => null),
+    api.get('/caixa/atual').then((r) => r.data.data ?? r.data).catch(() => null),
 
   abrir: (saldo_inicial: number): Promise<Caixa> =>
-    api.post('/caixas/abrir', { saldo_inicial }).then((r) => r.data.data ?? r.data),
+    api.post('/caixa/abrir', { saldo_inicial }).then((r) => r.data.data ?? r.data),
 
-  fechar: (id: number, observacoes?: string): Promise<Caixa> =>
-    api.post(`/caixas/${id}/fechar`, { observacoes }).then((r) => r.data.data ?? r.data),
+  fechar: (saldo_final: number, observacoes?: string): Promise<Caixa> =>
+    api.post('/caixa/fechar', { saldo_final, observacoes }).then((r) => r.data.data ?? r.data),
 
   buscar: (id: number): Promise<Caixa> =>
-    api.get(`/caixas/${id}`).then((r) => r.data.data ?? r.data),
+    api.get(`/caixa/${id}`).then((r) => r.data.data ?? r.data),
 }

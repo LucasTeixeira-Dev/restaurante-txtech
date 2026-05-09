@@ -22,7 +22,7 @@ export default function EstoquePage() {
   const [apenasAbaixo, setApenasAbaixo] = useState(false)
   const [movModal, setMovModal] = useState<Estoque | null>(null)
   const [movForm, setMovForm] = useState<MovimentacaoPayload>({
-    tipo: 'entrada', quantidade: 1, observacoes: '',
+    tipo: 'entrada', quantidade: 1, motivo: '',
   })
 
   const { data: itens = [], isLoading } = useQuery({
@@ -31,22 +31,22 @@ export default function EstoquePage() {
   })
 
   const filtrados = busca
-    ? itens.filter((e) => e.produto?.nome?.toLowerCase().includes(busca.toLowerCase()))
+    ? itens.filter((item: Estoque) => item.produto?.nome?.toLowerCase().includes(busca.toLowerCase()))
     : itens
 
   const { mutate: movimentar, isPending: movendo } = useMutation({
-    mutationFn: () => estoqueService.movimentar(movModal!.id, movForm),
+    mutationFn: () => estoqueService.movimentar(movModal!.produto_id, movForm),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['estoque'] })
       toast.success('Movimentação registrada.')
       setMovModal(null)
-      setMovForm({ tipo: 'entrada', quantidade: 1, observacoes: '' })
+      setMovForm({ tipo: 'entrada', quantidade: 1, motivo: '' })
     },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao registrar movimentação.'),
   })
 
   const abrirMovimentacao = (item: Estoque) => {
-    setMovForm({ tipo: 'entrada', quantidade: 1, observacoes: '' })
+    setMovForm({ tipo: 'entrada', quantidade: 1, motivo: '' })
     setMovModal(item)
   }
 
@@ -225,8 +225,8 @@ export default function EstoquePage() {
             <textarea
               rows={2}
               placeholder="Opcional..."
-              value={movForm.observacoes}
-              onChange={(e) => setMovForm({ ...movForm, observacoes: e.target.value })}
+              value={movForm.motivo}
+              onChange={(e) => setMovForm({ ...movForm, motivo: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>

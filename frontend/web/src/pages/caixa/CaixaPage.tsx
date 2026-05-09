@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { DollarSign, Lock, Unlock, Clock, ChevronRight } from 'lucide-react'
+import { Lock, Unlock, ChevronRight } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -17,6 +17,7 @@ export default function CaixaPage() {
   const [modalAbrir, setModalAbrir] = useState(false)
   const [modalFechar, setModalFechar] = useState(false)
   const [saldoInicial, setSaldoInicial] = useState('')
+  const [saldoFinal, setSaldoFinal] = useState('')
   const [observacoes, setObservacoes] = useState('')
   const [detalhe, setDetalhe] = useState<Caixa | null>(null)
 
@@ -44,12 +45,13 @@ export default function CaixaPage() {
   })
 
   const { mutate: fechar, isPending: fechando } = useMutation({
-    mutationFn: () => caixaService.fechar(caixaAtual!.id, observacoes || undefined),
+    mutationFn: () => caixaService.fechar(Number(saldoFinal) || 0, observacoes || undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['caixa-atual'] })
       queryClient.invalidateQueries({ queryKey: ['caixas'] })
       toast.success('Caixa fechado com sucesso.')
       setModalFechar(false)
+      setSaldoFinal('')
       setObservacoes('')
     },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao fechar caixa.'),
@@ -268,9 +270,21 @@ export default function CaixaPage() {
             </div>
           )}
           <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">Saldo final em caixa (R$) *</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0,00"
+              value={saldoFinal}
+              onChange={(e) => setSaldoFinal(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
+          <div>
             <label className="block text-xs font-medium text-gray-700 mb-1.5">Observações</label>
             <textarea
-              rows={3}
+              rows={2}
               placeholder="Opcional..."
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
