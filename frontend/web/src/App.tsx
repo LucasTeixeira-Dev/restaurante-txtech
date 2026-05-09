@@ -11,6 +11,12 @@ import PedidosPage from '@/pages/pedidos/PedidosPage'
 import NovoPedidoPage from '@/pages/pedidos/NovoPedidoPage'
 import DetalhesPedidoPage from '@/pages/pedidos/DetalhesPedidoPage'
 import KdsPage from '@/pages/kds/KdsPage'
+import ProdutosPage from '@/pages/produtos/ProdutosPage'
+import CategoriasPage from '@/pages/produtos/CategoriasPage'
+import CaixaPage from '@/pages/caixa/CaixaPage'
+import RelatoriosPage from '@/pages/relatorios/RelatoriosPage'
+import UsuariosPage from '@/pages/usuarios/UsuariosPage'
+import EstoquePage from '@/pages/estoque/EstoquePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,7 +46,9 @@ export default function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
 
               {/* Mesas */}
-              <Route path="/mesas" element={<MesasPage />} />
+              <Route element={<PrivateRoute papeis={['gerente', 'garcom']} />}>
+                <Route path="/mesas" element={<MesasPage />} />
+              </Route>
 
               {/* Pedidos */}
               <Route path="/pedidos" element={<PedidosPage />} />
@@ -53,6 +61,32 @@ export default function App() {
                 }
               />
               <Route path="/pedidos/:id" element={<DetalhesPedidoPage />} />
+
+              {/* Produtos e categorias — gerente */}
+              <Route element={<PrivateRoute papeis={['gerente']} />}>
+                <Route path="/produtos" element={<ProdutosPage />} />
+                <Route path="/categorias" element={<CategoriasPage />} />
+              </Route>
+
+              {/* Usuários — gerente */}
+              <Route element={<PrivateRoute papeis={['gerente']} />}>
+                <Route path="/usuarios" element={<UsuariosPage />} />
+              </Route>
+
+              {/* Estoque — gerente */}
+              <Route element={<PrivateRoute papeis={['gerente']} />}>
+                <Route path="/estoque" element={<EstoquePage />} />
+              </Route>
+
+              {/* Caixa — gerente e caixa */}
+              <Route element={<PrivateRoute papeis={['gerente', 'caixa']} />}>
+                <Route path="/caixa" element={<CaixaPage />} />
+              </Route>
+
+              {/* Relatórios — gerente */}
+              <Route element={<PrivateRoute papeis={['gerente']} />}>
+                <Route path="/relatorios" element={<RelatoriosPage />} />
+              </Route>
             </Route>
           </Route>
 

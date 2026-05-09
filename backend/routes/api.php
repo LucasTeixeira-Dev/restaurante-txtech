@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CardapioController;
 use App\Http\Controllers\Api\V1\CaixaController;
 use App\Http\Controllers\Api\V1\CategoriaController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\EstoqueController;
 use App\Http\Controllers\Api\V1\MesaController;
 use App\Http\Controllers\Api\V1\PedidoController;
@@ -24,6 +25,9 @@ Route::prefix('v1')->group(function () {
 
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me', [AuthController::class, 'me']);
+
+        // Dashboard — todos autenticados
+        Route::get('dashboard', [DashboardController::class, 'index']);
 
         // Usuários — apenas gerente
         Route::apiResource('usuarios', UsuarioController::class)

@@ -71,17 +71,18 @@ export interface Caixa {
   id: number
   saldo_inicial: number
   saldo_final: number | null
-  total_vendas: number
+  total_vendas: number | null
   aberto_em: string
   fechado_em: string | null
   observacoes: string | null
-  usuario: Pick<Usuario, 'id' | 'nome'>
+  usuario: Pick<Usuario, 'id' | 'nome'> | null
   usuario_fechamento: Pick<Usuario, 'id' | 'nome'> | null
 }
 
 export interface Estoque {
   id: number
   produto_id: number
+  produto: Pick<Produto, 'id' | 'nome'> & { categoria: Pick<Categoria, 'id' | 'nome'> | null } | null
   quantidade: number
   quantidade_minima: number
   unidade: string

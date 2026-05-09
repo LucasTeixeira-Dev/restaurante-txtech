@@ -11,6 +11,7 @@ import {
   BarChart3,
   CreditCard,
   LogOut,
+  Tag,
 } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -24,6 +25,7 @@ const navItems = [
   { to: '/kds', label: 'KDS Cozinha', icon: Monitor, papeis: ['gerente', 'chapeiro'] },
   { to: '/mesas', label: 'Mesas', icon: Table2, papeis: ['gerente', 'garcom'] },
   { to: '/produtos', label: 'Produtos', icon: UtensilsCrossed, papeis: ['gerente'] },
+  { to: '/categorias', label: 'Categorias', icon: Tag, papeis: ['gerente'] },
   { to: '/usuarios', label: 'Usuários', icon: Users, papeis: ['gerente'] },
   { to: '/estoque', label: 'Estoque', icon: Package, papeis: ['gerente'] },
   { to: '/caixa', label: 'Caixa', icon: CreditCard, papeis: ['gerente', 'caixa'] },
