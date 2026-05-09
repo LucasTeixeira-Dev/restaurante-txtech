@@ -1,4 +1,4 @@
-# Checklist de Desenvolvimento — Restaurante TxTech
+﻿# Checklist de Desenvolvimento — Restaurante TxTech
 
 ## Fase 1 — Estrutura Inicial ✅
 - [x] Backend Laravel 11: Models, Migrations, Controllers, Requests, Resources, Seeder, Routes
@@ -90,7 +90,7 @@
 - [x] Zustand carrinhoStore para estado do carrinho entre telas
 - [x] Serviços: cardapioService, mesaService, pedidoService
 - [x] Componentes: LoadingView, EmptyView, StatusBadge
-- [ ] Notificações push (expo-notifications: requer EAS Build)
+- [x] Notificações locais com polling 30s (expo-notifications, sem EAS Build)
 
 ---
 
@@ -102,3 +102,4 @@
 | ⚡ | Média prioridade |
 | 📱 | Mobile |
 | 📊 | Analytics |
+

@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '@/stores/authStore'
+import { usePedidosPolling } from '@/hooks/usePedidosPolling'
 
 export default function AppLayout() {
   const can = useAuthStore((s) => s.can)
+  usePedidosPolling()
 
   return (
     <Tabs
