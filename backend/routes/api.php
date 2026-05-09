@@ -53,6 +53,7 @@ Route::prefix('v1')->group(function () {
 
         // Mesas — todos autenticados podem ver; gerente gerencia
         Route::get('mesas', [MesaController::class, 'index']);
+        Route::get('mesas/qr/{token}', [MesaController::class, 'buscarPorQr']);
         Route::get('mesas/{mesa}', [MesaController::class, 'show']);
         Route::middleware('role:gerente')->group(function () {
             Route::post('mesas', [MesaController::class, 'store']);

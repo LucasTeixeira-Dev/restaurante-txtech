@@ -48,6 +48,13 @@ class MesaController extends Controller
         return response()->json(['message' => 'Mesa removida com sucesso.']);
     }
 
+    public function buscarPorQr(string $token): JsonResponse
+    {
+        $mesa = Mesa::with('pedidoAtivo')->where('qr_code_token', $token)->firstOrFail();
+
+        return response()->json(new MesaResource($mesa));
+    }
+
     public function atualizarStatus(Request $request, Mesa $mesa): JsonResponse
     {
         $request->validate([

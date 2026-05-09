@@ -10,6 +10,15 @@ export interface Usuario {
   criado_em: string
 }
 
+export interface Categoria {
+  id: number
+  nome: string
+  descricao: string | null
+  ativo: boolean
+  ordem: number
+  produtos?: Produto[]
+}
+
 export interface Produto {
   id: number
   nome: string
@@ -27,9 +36,11 @@ export interface Mesa {
   capacidade: number
   status: 'livre' | 'ocupada' | 'reservada'
   qr_code_token: string
+  pedido_ativo: { id: number; status: string; total: number } | null
 }
 
 export type StatusPedido = 'aberto' | 'em_preparo' | 'pronto' | 'entregue' | 'cancelado'
+export type StatusItemPedido = 'pendente' | 'em_preparo' | 'pronto' | 'cancelado'
 
 export interface ItemPedido {
   id: number
@@ -38,7 +49,7 @@ export interface ItemPedido {
   quantidade: number
   preco_unitario: number
   subtotal: number
-  status: 'pendente' | 'em_preparo' | 'pronto' | 'cancelado'
+  status: StatusItemPedido
   observacoes: string | null
 }
 
@@ -52,4 +63,10 @@ export interface Pedido {
   itens: ItemPedido[]
   criado_em: string
   atualizado_em: string
+}
+
+export interface CartItem {
+  produto: Produto
+  quantidade: number
+  observacoes: string
 }
