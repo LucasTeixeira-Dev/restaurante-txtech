@@ -1,0 +1,37 @@
+# Backend
+backend/.env
+backend/.env.backup
+backend/vendor/
+backend/storage/logs/*.log
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/bootstrap/cache/*.php
+backend/public/storage
+
+# Frontend Web
+frontend/web/node_modules/
+frontend/web/dist/
+frontend/web/.env.local
+frontend/web/.env.production
+
+# Frontend Mobile
+frontend/mobile/node_modules/
+frontend/mobile/.expo/
+frontend/mobile/dist/
+frontend/mobile/web-build/
+frontend/mobile/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/settings.json
+*.code-workspace
+
+# Docker
+.docker/
