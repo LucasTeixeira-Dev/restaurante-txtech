@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CardapioController;
 use App\Http\Controllers\Api\V1\CaixaController;
+use App\Http\Controllers\Api\V1\CategoriaController;
 use App\Http\Controllers\Api\V1\EstoqueController;
 use App\Http\Controllers\Api\V1\MesaController;
 use App\Http\Controllers\Api\V1\PedidoController;
@@ -27,6 +28,15 @@ Route::prefix('v1')->group(function () {
         // Usuários — apenas gerente
         Route::apiResource('usuarios', UsuarioController::class)
             ->middleware('role:gerente');
+
+        // Categorias — todos autenticados listam; gerente gerencia
+        Route::get('categorias', [CategoriaController::class, 'index']);
+        Route::get('categorias/{categoria}', [CategoriaController::class, 'show']);
+        Route::middleware('role:gerente')->group(function () {
+            Route::post('categorias', [CategoriaController::class, 'store']);
+            Route::put('categorias/{categoria}', [CategoriaController::class, 'update']);
+            Route::delete('categorias/{categoria}', [CategoriaController::class, 'destroy']);
+        });
 
         // Produtos — gerente e caixa podem listar; gerente gerencia
         Route::get('produtos', [ProdutoController::class, 'index']);

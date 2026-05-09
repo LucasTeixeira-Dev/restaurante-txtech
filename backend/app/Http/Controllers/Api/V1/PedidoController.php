@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Events\ItemPedidoStatusAtualizado;
+use App\Events\PedidoCriado;
+use App\Events\PedidoStatusAtualizado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Pedido\StorePedidoRequest;
 use App\Http\Resources\PedidoResource;
@@ -54,7 +57,10 @@ class PedidoController extends Controller
 
             $pedido->recalcularTotal();
 
-            return response()->json(new PedidoResource($pedido->load(['mesa', 'usuario', 'itens.produto'])), 201);
+            $pedido->load(['mesa', 'usuario', 'itens.produto']);
+            broadcast(new PedidoCriado($pedido))->toOthers();
+
+            return response()->json(new PedidoResource($pedido), 201);
         });
     }
 
@@ -78,6 +84,8 @@ class PedidoController extends Controller
             Mesa::find($pedido->mesa_id)?->update(['status' => Mesa::STATUS_LIVRE]);
         }
 
+        broadcast(new PedidoStatusAtualizado($pedido))->toOthers();
+
         return response()->json(new PedidoResource($pedido->load(['mesa', 'usuario', 'itens.produto'])));
     }
 
@@ -91,6 +99,8 @@ class PedidoController extends Controller
         ]);
 
         $item->update(['status' => $request->status]);
+
+        broadcast(new ItemPedidoStatusAtualizado($item))->toOthers();
 
         return response()->json(['message' => 'Status do item atualizado.', 'item' => $item]);
     }

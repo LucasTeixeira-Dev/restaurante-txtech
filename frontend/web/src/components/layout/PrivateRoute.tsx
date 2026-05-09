@@ -4,9 +4,10 @@ import type { PapelUsuario } from '@/types'
 
 interface PrivateRouteProps {
   papeis?: PapelUsuario[]
+  children?: React.ReactNode
 }
 
-export default function PrivateRoute({ papeis }: PrivateRouteProps) {
+export default function PrivateRoute({ papeis, children }: PrivateRouteProps) {
   const { isAuthenticated, can } = useAuthStore()
 
   if (!isAuthenticated()) {
@@ -17,5 +18,5 @@ export default function PrivateRoute({ papeis }: PrivateRouteProps) {
     return <Navigate to="/dashboard" replace />
   }
 
-  return <Outlet />
+  return children ? <>{children}</> : <Outlet />
 }

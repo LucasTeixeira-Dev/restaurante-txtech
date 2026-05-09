@@ -2,6 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import {
   ChefHat,
   LayoutDashboard,
+  Monitor,
   ShoppingBag,
   UtensilsCrossed,
   Table2,
@@ -20,6 +21,7 @@ import { cn } from '@/utils/cn'
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, papeis: ['gerente', 'garcom', 'chapeiro', 'caixa'] },
   { to: '/pedidos', label: 'Pedidos', icon: ShoppingBag, papeis: ['gerente', 'garcom', 'chapeiro'] },
+  { to: '/kds', label: 'KDS Cozinha', icon: Monitor, papeis: ['gerente', 'chapeiro'] },
   { to: '/mesas', label: 'Mesas', icon: Table2, papeis: ['gerente', 'garcom'] },
   { to: '/produtos', label: 'Produtos', icon: UtensilsCrossed, papeis: ['gerente'] },
   { to: '/usuarios', label: 'Usuários', icon: Users, papeis: ['gerente'] },
