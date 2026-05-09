@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   View, Text, FlatList, TouchableOpacity, RefreshControl, StyleSheet,
 } from 'react-native'
@@ -11,7 +12,7 @@ import { useAuthStore } from '@/stores/authStore'
 import LoadingView from '@/components/LoadingView'
 import StatusBadge from '@/components/StatusBadge'
 import EmptyView from '@/components/EmptyView'
-import type { Pedido, StatusPedido } from '@/types'
+import type { StatusPedido } from '@/types'
 
 const ABAS: { label: string; status?: StatusPedido }[] = [
   { label: 'Todos' },
@@ -92,9 +93,6 @@ export default function PedidosScreen() {
     </View>
   )
 }
-
-// precisamos do useState
-import { useState } from 'react'
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },

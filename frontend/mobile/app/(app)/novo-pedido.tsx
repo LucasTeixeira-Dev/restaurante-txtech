@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput,
+  View, Text, ScrollView, TouchableOpacity,
   Image, Alert, ActivityIndicator, StyleSheet, FlatList,
 } from 'react-native'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -15,19 +15,20 @@ import type { Produto } from '@/types'
 export default function NovoPedidoScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { itens, mesaId, mesaNumero, adicionar, remover, alterarQuantidade, limpar, total } = useCarrinhoStore()
+  const { itens, mesaId, mesaNumero, adicionar, alterarQuantidade, limpar, total } = useCarrinhoStore()
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(null)
   const [aba, setAba] = useState<'cardapio' | 'carrinho'>('cardapio')
 
   const { data: categorias = [], isLoading } = useQuery({
     queryKey: ['cardapio-mobile'],
     queryFn: cardapioService.listar,
-    onSuccess: (data) => {
-      if (data.length > 0 && categoriaAtiva === null) {
-        setCategoriaAtiva(data[0].id)
-      }
-    },
   })
+
+  useEffect(() => {
+    if (categorias.length > 0 && categoriaAtiva === null) {
+      setCategoriaAtiva(categorias[0].id)
+    }
+  }, [categorias])
 
   const { mutate: confirmar, isPending } = useMutation({
     mutationFn: () => {
