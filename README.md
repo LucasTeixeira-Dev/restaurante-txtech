@@ -1,6 +1,6 @@
 # Restaurante TxTech
 
-Sistema profissional de gerenciamento para restaurantes — evolução do TCC original reescrito com stack moderna.
+Sistema de gerenciamento para restaurantes: pedidos, KDS em tempo real, estoque e caixa. Laravel 11, React e React Native. — evolução do TCC original reescrito com stack moderna.
 
 ## Stack
 
