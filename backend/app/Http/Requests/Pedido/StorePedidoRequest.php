@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Pedido;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePedidoRequest extends FormRequest
 {
@@ -14,11 +15,12 @@ class StorePedidoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mesa_id' => ['nullable', 'exists:mesas,id'],
+            // whereNull: o exists simples aceitaria mesas/produtos removidos (soft delete).
+            'mesa_id' => ['nullable', Rule::exists('mesas', 'id')->whereNull('deleted_at')],
             'observacoes' => ['nullable', 'string', 'max:500'],
             'itens' => ['required', 'array', 'min:1'],
-            'itens.*.produto_id' => ['required', 'exists:produtos,id'],
-            'itens.*.quantidade' => ['required', 'integer', 'min:1'],
+            'itens.*.produto_id' => ['required', Rule::exists('produtos', 'id')->whereNull('deleted_at')],
+            'itens.*.quantidade' => ['required', 'integer', 'min:1', 'max:999'],
             'itens.*.observacoes' => ['nullable', 'string', 'max:255'],
         ];
     }

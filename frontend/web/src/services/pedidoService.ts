@@ -46,4 +46,15 @@ export const pedidoService = {
   async cancelar(id: number): Promise<void> {
     await api.delete(`/pedidos/${id}`)
   },
+
+  async adicionarItens(id: number, itens: NovoPedidoPayload['itens']): Promise<Pedido> {
+    const { data } = await api.post<Pedido>(`/pedidos/${id}/itens`, { itens })
+    return data
+  },
+
+  /** Só itens pendentes; os demais devem ser cancelados. */
+  async removerItem(id: number, itemId: number): Promise<Pedido> {
+    const { data } = await api.delete<Pedido>(`/pedidos/${id}/itens/${itemId}`)
+    return data
+  },
 }

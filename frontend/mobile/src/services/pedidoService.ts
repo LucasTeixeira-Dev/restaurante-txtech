@@ -26,6 +26,13 @@ export const pedidoService = {
 
   atualizarStatusItem: (pedidoId: number, itemId: number, status: StatusItemPedido): Promise<void> =>
     api.put(`/pedidos/${pedidoId}/itens/${itemId}/status`, { status }).then(() => undefined),
+
+  adicionarItens: (pedidoId: number, itens: NovoPedidoPayload['itens']): Promise<Pedido> =>
+    api.post(`/pedidos/${pedidoId}/itens`, { itens }).then((r) => r.data),
+
+  /** Só itens pendentes; os demais devem ser cancelados. */
+  removerItem: (pedidoId: number, itemId: number): Promise<Pedido> =>
+    api.delete(`/pedidos/${pedidoId}/itens/${itemId}`).then((r) => r.data),
 }
 
 export function carrinhoParaPayload(

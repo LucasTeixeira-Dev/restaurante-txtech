@@ -4,7 +4,7 @@ import {
   Image, Alert, ActivityIndicator, StyleSheet, FlatList,
 } from 'react-native'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { cardapioService } from '@/services/cardapioService'
 import { pedidoService, carrinhoParaPayload } from '@/services/pedidoService'
@@ -15,6 +15,9 @@ import type { Produto } from '@/types'
 export default function NovoPedidoScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
+  // Com pedido_id, a tela adiciona os itens do carrinho a um pedido já aberto.
+  const { pedido_id } = useLocalSearchParams<{ pedido_id?: string }>()
+  const pedidoExistente = pedido_id ? Number(pedido_id) : null
   const { itens, mesaId, mesaNumero, adicionar, alterarQuantidade, limpar, total } = useCarrinhoStore()
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(null)
   const [aba, setAba] = useState<'cardapio' | 'carrinho'>('cardapio')
@@ -33,11 +36,18 @@ export default function NovoPedidoScreen() {
   const { mutate: confirmar, isPending } = useMutation({
     mutationFn: () => {
       const payload = carrinhoParaPayload(itens, mesaId)
-      return pedidoService.criar(payload)
+      return pedidoExistente
+        ? pedidoService.adicionarItens(pedidoExistente, payload.itens)
+        : pedidoService.criar(payload)
     },
     onSuccess: (pedido) => {
       queryClient.invalidateQueries({ queryKey: ['pedidos-mobile'] })
+      queryClient.invalidateQueries({ queryKey: ['pedido-mobile', String(pedido.id)] })
       limpar()
+      if (pedidoExistente) {
+        router.replace(`/(app)/pedidos/${pedido.id}`)
+        return
+      }
       Alert.alert('Pedido criado!', `Pedido #${pedido.id} registrado com sucesso.`, [
         { text: 'Ver pedido', onPress: () => router.replace(`/(app)/pedidos/${pedido.id}`) },
         { text: 'Novo pedido', onPress: () => router.back() },
@@ -53,8 +63,15 @@ export default function NovoPedidoScreen() {
 
   return (
     <View style={styles.container}>
+      {pedidoExistente && (
+        <View style={styles.mesaBanner}>
+          <Ionicons name="add-circle-outline" size={16} color="#c2410c" />
+          <Text style={styles.mesaText}>Adicionando itens ao pedido #{pedidoExistente}</Text>
+        </View>
+      )}
+
       {/* Info da mesa */}
-      {mesaNumero && (
+      {!pedidoExistente && mesaNumero && (
         <View style={styles.mesaBanner}>
           <Ionicons name="grid-outline" size={16} color="#c2410c" />
           <Text style={styles.mesaText}>Mesa {mesaNumero}</Text>
@@ -141,7 +158,9 @@ export default function NovoPedidoScreen() {
               >
                 {isPending
                   ? <ActivityIndicator color="#fff" />
-                  : <Text style={styles.confirmarText}>Confirmar Pedido</Text>}
+                  : <Text style={styles.confirmarText}>
+                      {pedidoExistente ? `Adicionar ao pedido #${pedidoExistente}` : 'Confirmar Pedido'}
+                    </Text>}
               </TouchableOpacity>
             </>
           )}
