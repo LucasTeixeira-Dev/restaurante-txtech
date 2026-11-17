@@ -30,4 +30,15 @@ export const mesaService = {
   async remover(id: number): Promise<void> {
     await api.delete(`/mesas/${id}`)
   },
+
+  /** Liga/desliga o tablet da mesa; senha obrigatória na primeira ativação. */
+  async configurarAutoatendimento(id: number, payload: { ativo: boolean; senha?: string }): Promise<Mesa> {
+    const { data } = await api.put<Mesa>(`/mesas/${id}/autoatendimento`, payload)
+    return data
+  },
+
+  async atenderChamado(id: number): Promise<Mesa> {
+    const { data } = await api.post<Mesa>(`/mesas/${id}/atender-chamado`)
+    return data
+  },
 }

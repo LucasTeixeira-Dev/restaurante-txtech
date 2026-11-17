@@ -18,11 +18,12 @@ import toast from 'react-hot-toast'
 import { useAuthStore } from '@/stores/authStore'
 import { authService } from '@/services/authService'
 import { cn } from '@/utils/cn'
+import { useAvisosSalao } from '@/hooks/useAvisosSalao'
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, papeis: ['gerente', 'garcom', 'chapeiro', 'caixa'] },
-  { to: '/pedidos', label: 'Pedidos', icon: ShoppingBag, papeis: ['gerente', 'garcom', 'chapeiro'] },
-  { to: '/kds', label: 'KDS Cozinha', icon: Monitor, papeis: ['gerente', 'chapeiro'] },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, papeis: ['gerente', 'garcom', 'chapeiro', 'caixa', 'bar'] },
+  { to: '/pedidos', label: 'Pedidos', icon: ShoppingBag, papeis: ['gerente', 'garcom', 'chapeiro', 'bar'] },
+  { to: '/kds', label: 'KDS Cozinha / Bar', icon: Monitor, papeis: ['gerente', 'chapeiro', 'bar'] },
   { to: '/mesas', label: 'Mesas', icon: Table2, papeis: ['gerente', 'garcom'] },
   { to: '/produtos', label: 'Produtos', icon: UtensilsCrossed, papeis: ['gerente'] },
   { to: '/categorias', label: 'Categorias', icon: Tag, papeis: ['gerente'] },
@@ -35,6 +36,7 @@ const navItems = [
 export default function AppLayout() {
   const navigate = useNavigate()
   const { usuario, logout, can } = useAuthStore()
+  useAvisosSalao()
 
   const { mutate: handleLogout } = useMutation({
     mutationFn: authService.logout,

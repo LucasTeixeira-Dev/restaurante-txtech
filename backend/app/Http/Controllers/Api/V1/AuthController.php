@@ -28,7 +28,15 @@ class AuthController extends Controller
             ], 403);
         }
 
+        if ($usuario->isMesa() && !$usuario->mesa) {
+            return response()->json([
+                'message' => 'Este login de mesa não está vinculado a nenhuma mesa. Peça ajuda ao gerente.',
+            ], 403);
+        }
+
         $token = $usuario->createToken('api-token')->plainTextToken;
+
+        $usuario->load('roles');
 
         return response()->json([
             'token' => $token,
@@ -45,6 +53,6 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json(new UsuarioResource($request->user()));
+        return response()->json(new UsuarioResource($request->user()->load('roles')));
     }
 }

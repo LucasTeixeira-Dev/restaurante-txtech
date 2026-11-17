@@ -5,6 +5,8 @@ import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { caixaService } from '@/services/caixaService'
+import { FORMAS_PAGAMENTO } from '@/services/contaService'
+import ContasPanel from '@/components/caixa/ContasPanel'
 import { PageLoading } from '@/components/ui/LoadingSpinner'
 import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
@@ -114,13 +116,24 @@ export default function CaixaPage() {
               </div>
               {caixaAtual.total_vendas != null && (
                 <div className="text-right">
-                  <p className="text-xs text-gray-500">Vendas no período</p>
+                  <p className="text-xs text-gray-500">
+                    Recebido no caixa{caixaAtual.contas_pagas ? ` · ${caixaAtual.contas_pagas} conta(s)` : ''}
+                  </p>
                   <p className="text-xl font-bold text-green-700">
                     R$ {Number(caixaAtual.total_vendas).toFixed(2)}
                   </p>
                 </div>
               )}
             </div>
+            {caixaAtual.por_forma_pagamento && Object.keys(caixaAtual.por_forma_pagamento).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {FORMAS_PAGAMENTO.filter((f) => caixaAtual.por_forma_pagamento?.[f.value]).map((f) => (
+                  <span key={f.value} className="text-xs bg-white border border-green-100 rounded-lg px-2.5 py-1 text-gray-700">
+                    {f.label}: <span className="font-semibold">R$ {Number(caixaAtual.por_forma_pagamento?.[f.value]).toFixed(2)}</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex items-center gap-3">
@@ -132,6 +145,9 @@ export default function CaixaPage() {
           </div>
         )}
       </div>
+
+      {/* Contas das mesas e do balcão */}
+      <ContasPanel caixaAberto={caixaAberto} />
 
       {/* Histórico */}
       <div>

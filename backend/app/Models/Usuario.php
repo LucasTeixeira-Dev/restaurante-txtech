@@ -20,7 +20,11 @@ class Usuario extends Authenticatable
         'email',
         'senha',
         'ativo',
+        'mesa_id',
     ];
+
+    /** Papéis da equipe (o papel "mesa" é do tablet de autoatendimento). */
+    const PAPEIS_EQUIPE = ['gerente', 'garcom', 'chapeiro', 'caixa', 'bar'];
 
     protected $hidden = [
         'senha',
@@ -56,6 +60,36 @@ class Usuario extends Authenticatable
     public function isCaixa(): bool
     {
         return $this->hasRole('caixa');
+    }
+
+    public function isMesa(): bool
+    {
+        return $this->hasRole('mesa');
+    }
+
+    /**
+     * Setor de preparo do usuário: chapeiro -> cozinha, bar -> bar.
+     * null = vê e move todos os setores (gerente).
+     */
+    public function setorDePreparo(): ?string
+    {
+        if ($this->hasRole('gerente')) {
+            return null;
+        }
+        if ($this->hasRole('bar')) {
+            return ItemPedido::SETOR_BAR;
+        }
+        if ($this->hasRole('chapeiro')) {
+            return ItemPedido::SETOR_COZINHA;
+        }
+
+        return null;
+    }
+
+    /** Mesa do tablet de autoatendimento. */
+    public function mesa()
+    {
+        return $this->belongsTo(Mesa::class, 'mesa_id');
     }
 
     public function pedidos()

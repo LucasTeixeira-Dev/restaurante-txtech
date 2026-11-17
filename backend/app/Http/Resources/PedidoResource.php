@@ -14,6 +14,7 @@ class PedidoResource extends JsonResource
             'status' => $this->status,
             'total' => (float) $this->total,
             'observacoes' => $this->observacoes,
+            'conta_id' => $this->conta_id,
             'mesa' => $this->whenLoaded('mesa', fn() => $this->mesa ? [
                 'id' => $this->mesa->id,
                 'numero' => $this->mesa->numero,
@@ -33,10 +34,12 @@ class PedidoResource extends JsonResource
                 'preco_unitario' => (float) $item->preco_unitario,
                 'subtotal' => (float) $item->subtotal,
                 'status' => $item->status,
+                'setor' => $item->setor,
                 'observacoes' => $item->observacoes,
             ])),
             'criado_em' => $this->created_at?->toIso8601String(),
             'atualizado_em' => $this->updated_at?->toIso8601String(),
+            'entregue_em' => $this->entregue_em?->toIso8601String(),
         ];
     }
 }

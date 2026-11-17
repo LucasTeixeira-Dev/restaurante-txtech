@@ -3,7 +3,8 @@ import { api } from '@/lib/api'
 export interface DashboardData {
   kpis: {
     pedidos_hoje: number
-    receita_hoje: number
+    /** null para papéis sem acesso ao financeiro (garçom, chapeiro). */
+    receita_hoje: number | null
     pedidos_ativos: number
     mesas_ocupadas: number
     mesas_total: number
@@ -11,7 +12,8 @@ export interface DashboardData {
     caixa_aberto: boolean
     saldo_inicial_caixa: number | null
   }
-  vendas_semana: { data: string; pedidos: number; receita: number }[]
+  /** receita só vem para gerente e caixa. */
+  vendas_semana: { data: string; pedidos: number; receita?: number }[]
   top_produtos: { nome: string; total_vendido: number }[]
   pedidos_por_status: Record<string, number>
 }

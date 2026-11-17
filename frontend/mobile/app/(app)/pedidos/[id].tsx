@@ -11,9 +11,10 @@ import { pedidoService } from '@/services/pedidoService'
 import { useAuthStore } from '@/stores/authStore'
 import LoadingView from '@/components/LoadingView'
 import StatusBadge from '@/components/StatusBadge'
-import type { StatusItemPedido } from '@/types'
+import { PAPEIS_POR_STATUS } from '@/types'
+import type { StatusItemPedido, StatusPedido } from '@/types'
 
-const PROXIMO_STATUS: Record<string, string> = {
+const PROXIMO_STATUS: Record<string, StatusPedido> = {
   aberto: 'em_preparo',
   em_preparo: 'pronto',
   pronto: 'entregue',
@@ -50,6 +51,16 @@ export default function DetalhesPedidoScreen() {
     mutationFn: ({ itemId, status }: { itemId: number; status: StatusItemPedido }) =>
       pedidoService.atualizarStatusItem(Number(id), itemId, status),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pedido-mobile', id] }),
+    onError: (e: any) => Alert.alert('Erro', e?.response?.data?.message ?? 'Erro ao atualizar item.'),
+  })
+
+  const { mutate: removerItem } = useMutation({
+    mutationFn: (itemId: number) => pedidoService.removerItem(Number(id), itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pedido-mobile', id] })
+      queryClient.invalidateQueries({ queryKey: ['pedidos-mobile'] })
+    },
+    onError: (e: any) => Alert.alert('Erro', e?.response?.data?.message ?? 'Erro ao remover item.'),
   })
 
   const { mutate: cancelar, isPending: cancelando } = useMutation({
@@ -64,8 +75,12 @@ export default function DetalhesPedidoScreen() {
   if (isLoading) return <LoadingView />
   if (!pedido) return null
 
+  const encerrado = pedido.status === 'entregue' || pedido.status === 'cancelado'
   const proximoStatus = PROXIMO_STATUS[pedido.status]
-  const podeCancelar = pedido.status === 'aberto' && can(['gerente', 'garcom'])
+  // Só mostra o avanço para quem a API aceita (ex.: chapeiro não entrega, garçom não prepara).
+  const podeAvancar = !!proximoStatus && can(PAPEIS_POR_STATUS[proximoStatus] ?? [])
+  const podeCancelar = !encerrado && can(PAPEIS_POR_STATUS.cancelado ?? [])
+  const podeEditarItens = !encerrado && can(['gerente', 'garcom'])
 
   return (
     <ScrollView
@@ -105,7 +120,12 @@ export default function DetalhesPedidoScreen() {
       <View style={styles.itensCard}>
         {pedido.itens.map((item, idx) => {
           const proximoItemStatus = PROXIMO_ITEM_STATUS[item.status]
-          const podeAvancarItem = proximoItemStatus && can(['gerente', 'chapeiro'])
+          // Cada setor só avança os próprios itens (a API também valida).
+          const podeAvancarItem = proximoItemStatus && (
+            can(['gerente']) ||
+            (can(['chapeiro']) && item.setor === 'cozinha') ||
+            (can(['bar']) && item.setor === 'bar')
+          )
           return (
             <View key={item.id} style={[styles.item, idx > 0 && styles.itemBorder]}>
               <View style={{ flex: 1 }}>
@@ -119,14 +139,29 @@ export default function DetalhesPedidoScreen() {
               </View>
               <View style={{ alignItems: 'flex-end', gap: 6 }}>
                 <StatusBadge status={item.status} />
-                {podeAvancarItem && (
-                  <TouchableOpacity
-                    style={styles.itemBtn}
-                    onPress={() => avancarItem({ itemId: item.id, status: proximoItemStatus })}
-                  >
-                    <Ionicons name="arrow-forward-outline" size={14} color="#f97316" />
-                  </TouchableOpacity>
-                )}
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {podeEditarItens && item.status === 'pendente' && (
+                    <TouchableOpacity
+                      style={[styles.itemBtn, styles.itemBtnRemover]}
+                      onPress={() =>
+                        Alert.alert('Remover item?', item.produto?.nome ?? '', [
+                          { text: 'Não' },
+                          { text: 'Remover', style: 'destructive', onPress: () => removerItem(item.id) },
+                        ])
+                      }
+                    >
+                      <Ionicons name="trash-outline" size={14} color="#ef4444" />
+                    </TouchableOpacity>
+                  )}
+                  {podeAvancarItem && !encerrado && (
+                    <TouchableOpacity
+                      style={styles.itemBtn}
+                      onPress={() => avancarItem({ itemId: item.id, status: proximoItemStatus })}
+                    >
+                      <Ionicons name="arrow-forward-outline" size={14} color="#f97316" />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
           )
@@ -139,7 +174,17 @@ export default function DetalhesPedidoScreen() {
       </View>
 
       {/* Ações */}
-      {proximoStatus && can(['gerente', 'garcom', 'chapeiro']) && (
+      {podeEditarItens && (
+        <TouchableOpacity
+          style={styles.adicionarBtn}
+          onPress={() => router.push(`/(app)/novo-pedido?pedido_id=${pedido.id}`)}
+        >
+          <Ionicons name="add-circle-outline" size={18} color="#f97316" />
+          <Text style={styles.adicionarText}>Adicionar itens</Text>
+        </TouchableOpacity>
+      )}
+
+      {podeAvancar && (
         <TouchableOpacity
           style={[styles.avancarBtn, avancando && { opacity: 0.6 }]}
           onPress={() => avancarStatus(proximoStatus)}
@@ -195,6 +240,13 @@ const styles = StyleSheet.create({
     width: 28, height: 28, borderRadius: 8, backgroundColor: '#ffedd5',
     justifyContent: 'center', alignItems: 'center',
   },
+  itemBtnRemover: { backgroundColor: '#fee2e2' },
+  adicionarBtn: {
+    flexDirection: 'row', gap: 6, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14,
+    borderWidth: 1, borderColor: '#fed7aa',
+  },
+  adicionarText: { color: '#f97316', fontSize: 15, fontWeight: '600' },
   totalRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     padding: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6',

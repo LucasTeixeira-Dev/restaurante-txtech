@@ -19,10 +19,16 @@ class ItemPedidoStatusAtualizado implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [
+        $canais = [
             new Channel('pedidos'),
             new Channel("pedido.{$this->item->pedido_id}"),
         ];
+        $mesaId = $this->item->pedido?->mesa_id;
+        if ($mesaId) {
+            $canais[] = new Channel("mesa.{$mesaId}");
+        }
+
+        return $canais;
     }
 
     public function broadcastAs(): string
@@ -36,6 +42,7 @@ class ItemPedidoStatusAtualizado implements ShouldBroadcast
             'id' => $this->item->id,
             'pedido_id' => $this->item->pedido_id,
             'status' => $this->item->status,
+            'setor' => $this->item->setor,
             'atualizado_em' => $this->item->updated_at?->toIso8601String(),
         ];
     }

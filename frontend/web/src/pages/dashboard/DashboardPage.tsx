@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, Cell,
+  ResponsiveContainer,
 } from 'recharts'
 import {
-  ShoppingBag, DollarSign, Table2, Package,
+  ShoppingBag, DollarSign, Table2,
   TrendingUp, AlertTriangle, CheckCircle2, Clock,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
@@ -22,6 +22,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function DashboardPage() {
   const usuario = useAuthStore((s) => s.usuario)
+  // Receita só para gerente e caixa (a API também não envia os valores aos demais).
+  const veFinanceiro = useAuthStore((s) => s.can(['gerente', 'caixa']))
 
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
@@ -65,7 +67,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-2 gap-4 ${veFinanceiro ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         <KpiCard
           label="Pedidos hoje"
           value={kpis?.pedidos_hoje ?? 0}
@@ -73,13 +75,15 @@ export default function DashboardPage() {
           iconColor="text-blue-500"
           iconBg="bg-blue-50"
         />
-        <KpiCard
-          label="Receita hoje"
-          value={`R$ ${(kpis?.receita_hoje ?? 0).toFixed(2)}`}
-          icon={DollarSign}
-          iconColor="text-green-500"
-          iconBg="bg-green-50"
-        />
+        {veFinanceiro && (
+          <KpiCard
+            label="Receita hoje"
+            value={`R$ ${(kpis?.receita_hoje ?? 0).toFixed(2)}`}
+            icon={DollarSign}
+            iconColor="text-green-500"
+            iconBg="bg-green-50"
+          />
+        )}
         <KpiCard
           label="Mesas ocupadas"
           value={`${kpis?.mesas_ocupadas ?? 0} / ${kpis?.mesas_total ?? 0}`}
@@ -108,8 +112,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Gráfico vendas semana */}
+      <div className={`grid grid-cols-1 gap-4 ${veFinanceiro ? 'lg:grid-cols-3' : ''}`}>
+        {/* Gráfico vendas semana (financeiro) */}
+        {veFinanceiro && (
         <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-5">
           <h2 className="text-sm font-semibold text-gray-900 mb-4">Receita — últimos 7 dias</h2>
           {vendasSemana.length === 0 ? (
@@ -155,6 +160,7 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           )}
         </div>
+        )}
 
         {/* Painel direito */}
         <div className="space-y-4">

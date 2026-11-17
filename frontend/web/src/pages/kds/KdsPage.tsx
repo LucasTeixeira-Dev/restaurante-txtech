@@ -1,21 +1,29 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Clock, CheckCircle2, ChefHat } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { pedidoService } from '@/services/pedidoService'
 import { useEchoChannel } from '@/hooks/useEcho'
 import { Badge, statusItemBadge } from '@/components/ui/Badge'
+import { useAuthStore } from '@/stores/authStore'
 import { PageLoading } from '@/components/ui/LoadingSpinner'
-import type { Pedido, StatusItemPedido } from '@/types'
+import type { Pedido, Setor, StatusItemPedido } from '@/types'
+
+type Visao = Setor | 'todos'
+
+const TITULO: Record<Visao, string> = { cozinha: 'Cozinha', bar: 'Bar', todos: 'Cozinha e Bar' }
 
 // Pedidos relevantes para a cozinha são os que não estão entregues/cancelados
 const STATUS_COZINHA = ['aberto', 'em_preparo']
 
 export default function KdsPage() {
   const queryClient = useQueryClient()
-  const [agora] = useState(new Date())
+  // Relógio do KDS: atualiza a cada 30 s para o tempo de espera dos pedidos avançar na tela.
+  const [agora, setAgora] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setAgora(new Date()), 30_000)
+    return () => clearInterval(id)
+  }, [])
 
   const { data, isLoading } = useQuery({
     queryKey: ['kds-pedidos'],
@@ -24,7 +32,18 @@ export default function KdsPage() {
     refetchInterval: 20_000,
   })
 
-  const pedidos: Pedido[] = data ?? []
+  // Chapeiro vê a cozinha, barman vê o bar; gerente alterna entre as visões.
+  const usuario = useAuthStore((s) => s.usuario)
+  const ehGerente = usuario?.papel === 'gerente'
+  const [visao, setVisao] = useState<Visao>(
+    usuario?.papel === 'bar' ? 'bar' : usuario?.papel === 'chapeiro' ? 'cozinha' : 'todos',
+  )
+  const doSetor = (setor: Setor) => visao === 'todos' || setor === visao
+
+  // Só pedidos com algo a fazer neste setor (itens pendentes ou em preparo).
+  const pedidos: Pedido[] = (data ?? []).filter((p) =>
+    p.itens?.some((i) => doSetor(i.setor) && (i.status === 'pendente' || i.status === 'em_preparo')),
+  )
 
   const { mutate: atualizarItem } = useMutation({
     mutationFn: ({ pedidoId, itemId, status }: { pedidoId: number; itemId: number; status: StatusItemPedido }) =>
@@ -33,7 +52,7 @@ export default function KdsPage() {
       queryClient.invalidateQueries({ queryKey: ['kds-pedidos'] })
       queryClient.invalidateQueries({ queryKey: ['pedidos'] })
     },
-    onError: () => toast.error('Erro ao atualizar item.'),
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao atualizar item.'),
   })
 
   const { mutate: atualizarPedido } = useMutation({
@@ -44,12 +63,12 @@ export default function KdsPage() {
       queryClient.invalidateQueries({ queryKey: ['pedidos'] })
       toast.success('Pedido marcado como pronto!')
     },
-    onError: () => toast.error('Erro ao marcar pedido como pronto.'),
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao marcar pedido como pronto.'),
   })
 
   // Recebe novos pedidos em tempo real
   const handlePedidoCriado = useCallback(
-    (data: any) => {
+    () => {
       toast('Novo pedido recebido!', { icon: '🔔' })
       queryClient.invalidateQueries({ queryKey: ['kds-pedidos'] })
     },
@@ -92,13 +111,30 @@ export default function KdsPage() {
             <ChefHat className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">KDS — Cozinha</h1>
+            <h1 className="text-xl font-bold text-white">KDS — {TITULO[visao]}</h1>
             <p className="text-xs text-gray-400">{pedidos.length} pedido{pedidos.length !== 1 ? 's' : ''} em aberto</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          Ao vivo
+        <div className="flex items-center gap-4">
+          {ehGerente && (
+            <div className="flex bg-gray-800 rounded-lg p-1">
+              {(['todos', 'cozinha', 'bar'] as Visao[]).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setVisao(v)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                    visao === v ? 'bg-brand-500 text-white' : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  {v === 'todos' ? 'Todos' : TITULO[v]}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            Ao vivo
+          </div>
         </div>
       </div>
 
@@ -110,12 +146,15 @@ export default function KdsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {pedidos
+          {[...pedidos]
             .sort((a, b) => new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime())
             .map((pedido) => {
               const mins = minutosDesde(pedido.criado_em)
               const isUrgente = urgente(pedido.criado_em)
-              const todosItensProon = pedido.itens?.every((i) => i.status === 'pronto')
+              const itensDoSetor = pedido.itens?.filter((i) => i.status !== 'cancelado' && doSetor(i.setor)) ?? []
+              const faltaPreparar = itensDoSetor.some((i) => i.status !== 'pronto')
+              // Itens de outro setor no mesmo pedido (ex.: a bebida que o bar prepara).
+              const outrosSetores = (pedido.itens ?? []).filter((i) => i.status !== 'cancelado' && !doSetor(i.setor)).length
 
               return (
                 <div
@@ -145,7 +184,7 @@ export default function KdsPage() {
                   {/* Itens */}
                   <div className="flex-1 p-3 space-y-2">
                     {pedido.itens
-                      ?.filter((i) => i.status !== 'cancelado')
+                      ?.filter((i) => i.status !== 'cancelado' && doSetor(i.setor))
                       .map((item) => {
                         const { label, variant } = statusItemBadge(item.status)
                         const prox = proximoStatusItem(item.status as StatusItemPedido)
@@ -188,14 +227,20 @@ export default function KdsPage() {
                     </div>
                   )}
 
-                  {/* Botão marcar pedido como pronto */}
-                  {pedido.status !== 'pronto' && todosItensProon && (
+                  {outrosSetores > 0 && visao !== 'todos' && (
+                    <p className="px-3 py-1.5 text-xs text-gray-400 border-t border-white/5">
+                      + {outrosSetores} item(ns) {visao === 'cozinha' ? 'do bar' : 'da cozinha'}
+                    </p>
+                  )}
+
+                  {/* Tudo pronto de uma vez: a API só move os itens do setor de quem clica. */}
+                  {faltaPreparar && pedido.status === 'em_preparo' && (!ehGerente || visao === 'todos') && (
                     <button
                       onClick={() => atualizarPedido({ id: pedido.id, status: 'pronto' })}
                       className="w-full py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      Marcar Pedido como Pronto
+                      Marcar tudo como pronto
                     </button>
                   )}
                 </div>

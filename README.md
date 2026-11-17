@@ -13,7 +13,7 @@ Sistema profissional de gerenciamento para restaurantes — evolução do TCC or
 
 ## Módulos
 
-1. Autenticação (4 papéis: gerente, garcom, chapeiro, caixa)
+1. Autenticação (papéis: gerente, garcom, chapeiro, bar, caixa e mesa — o tablet de autoatendimento)
 2. Usuários (CRUD — gerente)
 3. Categorias de produtos
 4. Produtos / Cardápio (imagem, preço, disponibilidade, estoque)
@@ -22,7 +22,9 @@ Sistema profissional de gerenciamento para restaurantes — evolução do TCC or
 7. Itens de pedido
 8. Estoque (movimentações de entrada/saída/ajuste)
 9. Caixa (abertura/fechamento)
-10. Relatórios (vendas, produtos, financeiro, estoque)
+10. Relatórios (vendas, produtos, financeiro por forma de pagamento, estoque)
+11. Contas (comandas): juntam os pedidos da mesa até o pagamento no caixa
+12. Autoatendimento: tablet na mesa (rota `/mesa` do web) para pedir, chamar o garçom e pedir a conta
 
 ## Subir o ambiente
 
@@ -51,6 +53,10 @@ cd frontend/mobile && npm install && npx expo start
 | `garcom@restaurante.com` | `senha123` | Garçom |
 | `chapeiro@restaurante.com` | `senha123` | Chapeiro |
 | `caixa@restaurante.com` | `senha123` | Caixa |
+| `bar@restaurante.com` | `senha123` | Bar |
+| `mesa1@autoatendimento.local` | `senha123` | Tablet da Mesa 1 (abre direto o autoatendimento) |
+
+Os tablets das demais mesas são ligados pelo gerente na tela de Mesas (ícone de tablet no card).
 
 ## URLs locais
 

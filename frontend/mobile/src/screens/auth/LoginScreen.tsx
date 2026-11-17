@@ -25,6 +25,11 @@ export default function LoginScreen() {
   const { mutate, isPending } = useMutation({
     mutationFn: authService.login,
     onSuccess: ({ token, usuario }) => {
+      // Login de tablet de mesa é só para o autoatendimento no navegador.
+      if (usuario.papel === 'mesa') {
+        Alert.alert('Login de mesa', 'Este login é do tablet de autoatendimento. Use-o no navegador do tablet.')
+        return
+      }
       setAuth(token, usuario)
       router.replace('/(app)/dashboard')
     },

@@ -15,6 +15,7 @@ const PAPEIS = [
   { value: 'garcom', label: 'Garçom' },
   { value: 'chapeiro', label: 'Chapeiro' },
   { value: 'caixa', label: 'Caixa' },
+  { value: 'bar', label: 'Bar' },
 ]
 
 const PAPEL_COLORS: Record<string, string> = {
@@ -22,6 +23,7 @@ const PAPEL_COLORS: Record<string, string> = {
   garcom: 'bg-blue-50 text-blue-700 border-blue-200',
   chapeiro: 'bg-orange-50 text-orange-700 border-orange-200',
   caixa: 'bg-green-50 text-green-700 border-green-200',
+  bar: 'bg-cyan-50 text-cyan-700 border-cyan-200',
 }
 
 const VAZIO = { nome: '', email: '', senha: '', papel: 'garcom', ativo: true }

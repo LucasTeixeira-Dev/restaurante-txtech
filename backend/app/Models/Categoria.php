@@ -15,6 +15,7 @@ class Categoria extends Model
     protected $fillable = [
         'nome',
         'descricao',
+        'setor',
         'ativo',
         'ordem',
     ];
@@ -23,6 +24,9 @@ class Categoria extends Model
         'ativo' => 'boolean',
         'ordem' => 'integer',
     ];
+
+    /** Setor que prepara os itens da categoria (KDS da cozinha ou do bar). */
+    const SETORES = ['cozinha', 'bar'];
 
     public function produtos()
     {

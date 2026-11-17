@@ -19,10 +19,16 @@ class PedidoStatusAtualizado implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [
+        $canais = [
             new Channel('pedidos'),
             new Channel("pedido.{$this->pedido->id}"),
         ];
+        // Tablet de autoatendimento da mesa acompanha o andamento.
+        if ($this->pedido->mesa_id) {
+            $canais[] = new Channel("mesa.{$this->pedido->mesa_id}");
+        }
+
+        return $canais;
     }
 
     public function broadcastAs(): string

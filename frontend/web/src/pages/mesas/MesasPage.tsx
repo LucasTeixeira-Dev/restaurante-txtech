@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Users, QrCode, RefreshCw } from 'lucide-react'
+import { Plus, Users, RefreshCw, BellRing, Receipt, Tablet } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { mesaService } from '@/services/mesaService'
+import { contaService } from '@/services/contaService'
 import { useAuthStore } from '@/stores/authStore'
 import { Badge, statusMesaBadge } from '@/components/ui/Badge'
 import { PageLoading } from '@/components/ui/LoadingSpinner'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal } from '@/components/ui/Modal'
+import AutoatendimentoModal from '@/components/mesas/AutoatendimentoModal'
 import type { Mesa } from '@/types'
 
 const STATUS_ORDER: Mesa['status'][] = ['livre', 'ocupada', 'reservada']
@@ -25,6 +27,7 @@ export default function MesasPage() {
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
   const [modalAbrir, setModalAbrir] = useState(false)
   const [novaCapacidade, setNovaCapacidade] = useState(4)
+  const [mesaTablet, setMesaTablet] = useState<Mesa | null>(null)
 
   const { data: mesas = [], isLoading, refetch } = useQuery({
     queryKey: ['mesas'],
@@ -48,7 +51,33 @@ export default function MesasPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mesas'] })
     },
-    onError: () => toast.error('Erro ao atualizar status da mesa.'),
+    // Ex.: "não é possível liberar a mesa 5: ela tem uma conta em aberto".
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao atualizar status da mesa.'),
+  })
+
+  // Atendimento manual: garçom avisa o caixa que a mesa quer fechar a conta.
+  const { mutate: pedirConta } = useMutation({
+    mutationFn: (contaId: number) => contaService.solicitarFechamento(contaId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mesas'] })
+      toast.success('Caixa avisado: a mesa pediu a conta.')
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao pedir a conta.'),
+  })
+
+  const { mutate: confirmarMaquininha } = useMutation({
+    mutationFn: ({ id, forma }: { id: number; forma: 'debito' | 'credito' }) => contaService.confirmarPagamento(id, forma),
+    onSuccess: (c) => {
+      queryClient.invalidateQueries({ queryKey: ['mesas'] })
+      toast.success(c.status === 'paga' ? 'Pagamento confirmado. Conta quitada e mesa liberada!' : 'Pagamento confirmado.')
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erro ao confirmar o pagamento.'),
+  })
+
+  const { mutate: atenderChamado } = useMutation({
+    mutationFn: (id: number) => mesaService.atenderChamado(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['mesas'] }),
+    onError: () => toast.error('Erro ao marcar o chamado como atendido.'),
   })
 
   const mesasFiltradas = filtroStatus === 'todos'
@@ -142,9 +171,10 @@ export default function MesasPage() {
                   key={mesa.id}
                   className={`relative border-2 rounded-xl p-4 cursor-pointer transition-all ${STATUS_COLORS[mesa.status]}`}
                   onClick={() => {
-                    if (mesa.status === 'ocupada' && mesa.pedido_ativo) {
+                    if (mesa.pedido_ativo) {
                       navigate(`/pedidos/${mesa.pedido_ativo.id}`)
-                    } else if (mesa.status === 'livre' && can(['gerente', 'garcom'])) {
+                    } else if (mesa.status !== 'reservada' && can(['gerente', 'garcom'])) {
+                      // Mesa livre ou com conta aberta: o novo pedido entra na mesma conta.
                       navigate(`/pedidos/novo?mesa_id=${mesa.id}`)
                     }
                   }}
@@ -158,12 +188,83 @@ export default function MesasPage() {
                     <div className="mt-2">
                       <Badge variant={variant}>{label}</Badge>
                     </div>
-                    {mesa.pedido_ativo && (
+                    {mesa.conta && (
                       <p className="text-xs text-gray-500 mt-1.5 font-medium">
-                        R$ {mesa.pedido_ativo.total.toFixed(2)}
+                        Conta R$ {mesa.conta.subtotal.toFixed(2)}
+                      </p>
+                    )}
+                    {mesa.conta?.conta_solicitada && (
+                      <p className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-red-600">
+                        <Receipt className="w-3 h-3" /> Em pagamento · falta R$ {mesa.conta.restante.toFixed(2)}
                       </p>
                     )}
                   </div>
+
+                  {/* Maquininha pedida pelo tablet: quem levar confirma aqui o débito ou crédito. */}
+                  {can(['gerente', 'garcom']) && mesa.conta?.pagamentos_pendentes
+                    .filter((p) => p.metodo === 'maquininha')
+                    .map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-2 rounded-lg bg-amber-100 border border-amber-200 p-2 text-center"
+                      >
+                        <p className="text-xs font-semibold text-amber-800">
+                          Maquininha · R$ {p.valor.toFixed(2)}
+                        </p>
+                        <div className="flex gap-1 mt-1.5">
+                          {(['debito', 'credito'] as const).map((f) => (
+                            <button
+                              key={f}
+                              onClick={() => confirmarMaquininha({ id: p.id, forma: f })}
+                              className="flex-1 text-xs font-semibold text-white bg-green-600 hover:bg-green-700 rounded py-1"
+                            >
+                              {f === 'debito' ? 'Débito' : 'Crédito'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                  {mesa.conta && !mesa.conta.conta_solicitada && can(['gerente', 'garcom']) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        pedirConta(mesa.conta!.id)
+                      }}
+                      className="mt-2 w-full flex items-center justify-center gap-1 text-xs font-medium text-gray-600 bg-white/80 border border-gray-200 hover:bg-white rounded-lg py-1.5"
+                    >
+                      <Receipt className="w-3.5 h-3.5" /> Pedir conta
+                    </button>
+                  )}
+
+                  {mesa.garcom_chamado_em && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        atenderChamado(mesa.id)
+                      }}
+                      className="mt-2 w-full flex items-center justify-center gap-1 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg py-1.5 animate-pulse"
+                      title="Marcar chamado como atendido"
+                    >
+                      <BellRing className="w-3.5 h-3.5" /> Chamando · Atender
+                    </button>
+                  )}
+
+                  {(mesa.autoatendimento?.ativo || can(['gerente'])) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (can(['gerente'])) setMesaTablet(mesa)
+                      }}
+                      className={`absolute top-1.5 left-1.5 p-1 rounded ${
+                        mesa.autoatendimento?.ativo ? 'text-brand-600' : 'text-gray-300 hover:text-gray-500'
+                      }`}
+                      title={mesa.autoatendimento?.ativo ? 'Tablet de autoatendimento ativo' : 'Configurar tablet'}
+                    >
+                      <Tablet className="w-4 h-4" />
+                    </button>
+                  )}
 
                   {/* Troca rápida de status — apenas gerente/garçom */}
                   {can(['gerente', 'garcom']) && (
@@ -188,6 +289,8 @@ export default function MesasPage() {
             })}
         </div>
       )}
+
+      {mesaTablet && <AutoatendimentoModal mesa={mesaTablet} onClose={() => setMesaTablet(null)} />}
 
       {/* Modal Nova Mesa */}
       <Modal

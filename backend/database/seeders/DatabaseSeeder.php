@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Papéis
-        $papeis = ['gerente', 'garcom', 'chapeiro', 'caixa'];
+        $papeis = ['gerente', 'garcom', 'chapeiro', 'caixa', 'bar', 'mesa'];
         foreach ($papeis as $papel) {
             Role::firstOrCreate(['name' => $papel, 'guard_name' => 'sanctum']);
         }
@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             ['nome' => 'Garçom', 'email' => 'garcom@restaurante.com', 'papel' => 'garcom'],
             ['nome' => 'Chapeiro', 'email' => 'chapeiro@restaurante.com', 'papel' => 'chapeiro'],
             ['nome' => 'Caixa', 'email' => 'caixa@restaurante.com', 'papel' => 'caixa'],
+            ['nome' => 'Bar', 'email' => 'bar@restaurante.com', 'papel' => 'bar'],
         ];
 
         foreach ($usuarios as $dados) {
@@ -42,10 +43,10 @@ class DatabaseSeeder extends Seeder
 
         // Categorias
         $categorias = [
-            ['nome' => 'Lanches', 'descricao' => 'Hambúrgueres e sanduíches', 'ordem' => 1],
-            ['nome' => 'Bebidas', 'descricao' => 'Refrigerantes, sucos e bebidas', 'ordem' => 2],
-            ['nome' => 'Porções', 'descricao' => 'Batata frita, onion rings e acompanhamentos', 'ordem' => 3],
-            ['nome' => 'Sobremesas', 'descricao' => 'Milkshakes, sorvetes e doces', 'ordem' => 4],
+            ['nome' => 'Lanches', 'descricao' => 'Hambúrgueres e sanduíches', 'setor' => 'cozinha', 'ordem' => 1],
+            ['nome' => 'Bebidas', 'descricao' => 'Refrigerantes, sucos e bebidas', 'setor' => 'bar', 'ordem' => 2],
+            ['nome' => 'Porções', 'descricao' => 'Batata frita, onion rings e acompanhamentos', 'setor' => 'cozinha', 'ordem' => 3],
+            ['nome' => 'Sobremesas', 'descricao' => 'Milkshakes, sorvetes e doces', 'setor' => 'cozinha', 'ordem' => 4],
         ];
 
         foreach ($categorias as $dados) {
@@ -110,5 +111,13 @@ class DatabaseSeeder extends Seeder
                 ['capacidade' => 4, 'status' => 'livre']
             );
         }
+
+        // Exemplo de autoatendimento: tablet da Mesa 1 (em produção, o gerente configura na tela de Mesas).
+        $mesa1 = Mesa::where('numero', 1)->first();
+        $tablet = Usuario::firstOrCreate(
+            ['email' => 'mesa1@' . config('restaurante.dominio_login_mesa')],
+            ['nome' => 'Mesa 1', 'senha' => Hash::make('senha123'), 'ativo' => true, 'mesa_id' => $mesa1->id]
+        );
+        $tablet->syncRoles(['mesa']);
     }
 }

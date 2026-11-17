@@ -11,7 +11,8 @@ import LoadingView from '@/components/LoadingView'
 interface DashboardData {
   kpis: {
     pedidos_hoje: number
-    receita_hoje: number
+    /** null para papéis sem acesso ao financeiro (garçom, chapeiro). */
+    receita_hoje: number | null
     pedidos_ativos: number
     mesas_ocupadas: number
     mesas_total: number
@@ -69,13 +70,16 @@ export default function DashboardScreen() {
           color="#3b82f6"
           bg="#dbeafe"
         />
-        <KpiCard
-          label="Receita hoje"
-          value={`R$ ${(kpis?.receita_hoje ?? 0).toFixed(2)}`}
-          icon="cash-outline"
-          color="#16a34a"
-          bg="#dcfce7"
-        />
+        {/* Receita só para gerente e caixa (a API também não envia aos demais). */}
+        {can(['gerente', 'caixa']) && (
+          <KpiCard
+            label="Receita hoje"
+            value={`R$ ${(kpis?.receita_hoje ?? 0).toFixed(2)}`}
+            icon="cash-outline"
+            color="#16a34a"
+            bg="#dcfce7"
+          />
+        )}
         <KpiCard
           label="Pedidos ativos"
           value={String(kpis?.pedidos_ativos ?? 0)}

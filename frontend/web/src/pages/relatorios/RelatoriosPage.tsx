@@ -19,6 +19,14 @@ const PERIODO_OPTIONS = [
 
 const COLORS = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ec4899']
 
+const ROTULO_FORMA: Record<string, string> = {
+  dinheiro: 'Dinheiro',
+  debito: 'Débito',
+  credito: 'Crédito',
+  pix: 'Pix',
+  nao_informado: 'Antes das contas',
+}
+
 export default function RelatoriosPage() {
   const [periodo, setPeriodo] = useState(7)
 
@@ -114,6 +122,26 @@ export default function RelatoriosPage() {
         />
       </div>
 
+      {/* Recebimentos por forma de pagamento (contas pagas no período) */}
+      {financeiro && Object.keys(financeiro.por_forma_pagamento ?? {}).length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">
+            Recebido por forma de pagamento · {financeiro.contas_pagas} conta(s)
+            {financeiro.taxa_servico_total > 0 && (
+              <span className="font-normal text-gray-500"> · taxa de serviço R$ {Number(financeiro.taxa_servico_total).toFixed(2)}</span>
+            )}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {Object.entries(financeiro.por_forma_pagamento).map(([forma, valor]) => (
+              <div key={forma} className="bg-gray-50 rounded-xl px-4 py-3">
+                <p className="text-xs text-gray-500">{ROTULO_FORMA[forma] ?? forma}</p>
+                <p className="text-lg font-bold text-gray-900">R$ {Number(valor).toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico receita */}
         <div className="bg-white border border-gray-100 rounded-2xl p-5">
@@ -187,6 +215,26 @@ export default function RelatoriosPage() {
           )}
         </div>
       </div>
+
+      {/* Recebimentos por forma de pagamento (contas pagas no período) */}
+      {financeiro && Object.keys(financeiro.por_forma_pagamento ?? {}).length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">
+            Recebido por forma de pagamento · {financeiro.contas_pagas} conta(s)
+            {financeiro.taxa_servico_total > 0 && (
+              <span className="font-normal text-gray-500"> · taxa de serviço R$ {Number(financeiro.taxa_servico_total).toFixed(2)}</span>
+            )}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {Object.entries(financeiro.por_forma_pagamento).map(([forma, valor]) => (
+              <div key={forma} className="bg-gray-50 rounded-xl px-4 py-3">
+                <p className="text-xs text-gray-500">{ROTULO_FORMA[forma] ?? forma}</p>
+                <p className="text-lg font-bold text-gray-900">R$ {Number(valor).toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top produtos */}

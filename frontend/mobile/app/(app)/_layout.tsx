@@ -1,11 +1,18 @@
-import { Tabs } from 'expo-router'
+import { Redirect, Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '@/stores/authStore'
 import { usePedidosPolling } from '@/hooks/usePedidosPolling'
+import LoadingView from '@/components/LoadingView'
 
 export default function AppLayout() {
   const can = useAuthStore((s) => s.can)
+  const hidratado = useAuthStore((s) => s.hidratado)
+  const autenticado = useAuthStore((s) => !!s.token && !!s.usuario)
   usePedidosPolling()
+
+  // Guarda de rota: sem sessão (inclusive após um 401, que limpa o token) volta ao login.
+  if (!hidratado) return <LoadingView />
+  if (!autenticado) return <Redirect href="/(auth)/login" />
 
   return (
     <Tabs
@@ -35,6 +42,16 @@ export default function AppLayout() {
         }}
       />
 
+      {/* Mesas — garcom e gerente */}
+      <Tabs.Screen
+        name="mesas"
+        options={{
+          title: 'Mesas',
+          href: can(['gerente', 'garcom']) ? undefined : null,
+          tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
+        }}
+      />
+
       {/* Scanner / Novo Pedido — garcom e gerente */}
       <Tabs.Screen
         name="scanner"
@@ -50,8 +67,17 @@ export default function AppLayout() {
         name="kds"
         options={{
           title: 'KDS',
-          href: can(['gerente', 'chapeiro']) ? undefined : null,
+          href: can(['gerente', 'chapeiro', 'bar']) ? undefined : null,
           tabBarIcon: ({ color, size }) => <Ionicons name="restaurant-outline" size={size} color={color} />,
+        }}
+      />
+
+      {/* Perfil — todos */}
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
       />
 

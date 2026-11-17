@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { pedidoService } from '@/services/pedidoService'
+import { useAuthStore } from '@/stores/authStore'
 import LoadingView from '@/components/LoadingView'
 import EmptyView from '@/components/EmptyView'
 import type { Pedido, StatusItemPedido } from '@/types'
@@ -30,6 +31,9 @@ const ITEM_COR_TEXT: Record<string, string> = {
 
 export default function KdsScreen() {
   const queryClient = useQueryClient()
+  const papel = useAuthStore((s) => s.usuario?.papel)
+  const setor = papel === 'bar' ? 'bar' : papel === 'chapeiro' ? 'cozinha' : null // null = todos
+  const doSetor = (s: string) => !setor || s === setor
 
   const { data: pedidos = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['kds-mobile'],
@@ -43,7 +47,9 @@ export default function KdsScreen() {
     refetchInterval: 10_000,
   })
 
-  const todosPedidos = [...abertos, ...pedidos].sort(
+  const todosPedidos = [...abertos, ...pedidos]
+    .filter((p) => p.itens.some((i) => doSetor(i.setor) && (i.status === 'pendente' || i.status === 'em_preparo')))
+    .sort(
     (a, b) => new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime(),
   )
 
@@ -54,7 +60,7 @@ export default function KdsScreen() {
       queryClient.invalidateQueries({ queryKey: ['kds-mobile'] })
       queryClient.invalidateQueries({ queryKey: ['kds-mobile-abertos'] })
     },
-    onError: () => Alert.alert('Erro', 'Não foi possível atualizar o item.'),
+    onError: (e: any) => Alert.alert('Erro', e?.response?.data?.message ?? 'Não foi possível atualizar o item.'),
   })
 
   const { mutate: marcarPronto } = useMutation({
@@ -94,7 +100,8 @@ export default function KdsScreen() {
         renderItem={({ item: pedido }) => {
           const mins = minutos(pedido.criado_em)
           const urgente = mins >= 15
-          const todosItensProntos = pedido.itens.every((i) => i.status === 'pronto')
+          const itensDoSetor = pedido.itens.filter((i) => i.status !== 'cancelado' && doSetor(i.setor))
+          const faltaPreparar = itensDoSetor.some((i) => i.status !== 'pronto')
 
           return (
             <View style={[styles.card, urgente && styles.cardUrgente]}>
@@ -124,7 +131,7 @@ export default function KdsScreen() {
 
               {/* Itens */}
               <View style={styles.itens}>
-                {pedido.itens.map((item) => {
+                {itensDoSetor.map((item) => {
                   const prox = ITEM_PROX[item.status]
                   return (
                     <View
@@ -163,13 +170,14 @@ export default function KdsScreen() {
               </View>
 
               {/* Marcar pedido como pronto */}
-              {todosItensProntos && pedido.status !== 'pronto' && (
+              {/* A API só marca como prontos os itens do setor de quem toca. */}
+              {faltaPreparar && pedido.status === 'em_preparo' && (
                 <TouchableOpacity
                   style={styles.prontoBtn}
                   onPress={() => marcarPronto(pedido.id)}
                 >
                   <Ionicons name="checkmark-done-outline" size={18} color="#fff" />
-                  <Text style={styles.prontoBtnText}>Marcar pedido como pronto</Text>
+                  <Text style={styles.prontoBtnText}>Marcar tudo como pronto</Text>
                 </TouchableOpacity>
               )}
             </View>

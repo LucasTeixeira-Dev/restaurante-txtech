@@ -18,6 +18,7 @@ class ItemPedido extends Model
         'preco_unitario',
         'subtotal',
         'status',
+        'setor',
         'observacoes',
     ];
 
@@ -31,6 +32,17 @@ class ItemPedido extends Model
     const STATUS_EM_PREPARO = 'em_preparo';
     const STATUS_PRONTO = 'pronto';
     const STATUS_CANCELADO = 'cancelado';
+
+    const SETOR_COZINHA = 'cozinha';
+    const SETOR_BAR = 'bar';
+
+    /** Para cada status do item, os próximos permitidos. Pronto e cancelado são finais. */
+    const TRANSICOES = [
+        self::STATUS_PENDENTE => [self::STATUS_EM_PREPARO, self::STATUS_CANCELADO],
+        self::STATUS_EM_PREPARO => [self::STATUS_PRONTO, self::STATUS_CANCELADO],
+        self::STATUS_PRONTO => [],
+        self::STATUS_CANCELADO => [],
+    ];
 
     protected static function boot(): void
     {

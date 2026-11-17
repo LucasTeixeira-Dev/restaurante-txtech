@@ -31,6 +31,11 @@ export default function LoginPage() {
     mutationFn: authService.login,
     onSuccess: ({ token, usuario }) => {
       setAuth(token, usuario)
+      // Login de tablet abre direto o autoatendimento.
+      if (usuario.papel === 'mesa') {
+        navigate('/mesa', { replace: true })
+        return
+      }
       toast.success(`Bem-vindo, ${usuario.nome}!`)
       navigate('/dashboard')
     },

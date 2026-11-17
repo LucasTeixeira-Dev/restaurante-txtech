@@ -11,13 +11,22 @@ use Illuminate\Http\Request;
 
 class CardapioController extends Controller
 {
+    /** Categorias ativas com os produtos disponíveis (formato do ProdutoResource: preço numérico e imagem_url). */
     public function index(Request $request): JsonResponse
     {
         $categorias = Categoria::with([
-            'produtos' => fn($q) => $q->disponiveis()->with('media'),
+            'produtos' => fn($q) => $q->disponiveis()->with('media')->orderBy('nome'),
         ])
             ->ativas()
-            ->get();
+            ->get()
+            ->map(fn (Categoria $c) => [
+                'id' => $c->id,
+                'nome' => $c->nome,
+                'descricao' => $c->descricao,
+                'setor' => $c->setor,
+                'ordem' => $c->ordem,
+                'produtos' => ProdutoResource::collection($c->produtos)->resolve($request),
+            ]);
 
         return response()->json($categorias);
     }

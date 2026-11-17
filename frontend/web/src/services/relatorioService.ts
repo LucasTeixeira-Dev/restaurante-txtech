@@ -17,11 +17,15 @@ export interface ProdutoVendido {
   receita: number
 }
 
+/** Receita = contas pagas no período (com taxa de serviço). */
 export interface DadosFinanceiro {
-  total_vendas: number
+  periodo: { inicio: string; fim: string }
+  receita_total: number
+  taxa_servico_total: number
+  contas_pagas: number
   ticket_medio: number
-  total_pedidos: number
-  por_forma_pagamento?: Record<string, number>
+  por_forma_pagamento: Record<string, number>
+  pedidos_cancelados: number
 }
 
 export interface ItemEstoqueRelatorio {

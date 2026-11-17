@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Usuario;
 
+use App\Models\Usuario;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,7 @@ class StoreUsuarioRequest extends FormRequest
             'nome' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'unique:usuarios,email'],
             'senha' => ['required', 'string', 'min:6'],
-            'papel' => ['required', Rule::in(['gerente', 'garcom', 'chapeiro', 'caixa'])],
+            'papel' => ['required', Rule::in(Usuario::PAPEIS_EQUIPE)],
             'ativo' => ['boolean'],
         ];
     }
@@ -33,7 +34,7 @@ class StoreUsuarioRequest extends FormRequest
             'senha.required' => 'A senha é obrigatória.',
             'senha.min' => 'A senha deve ter no mínimo 6 caracteres.',
             'papel.required' => 'O papel do usuário é obrigatório.',
-            'papel.in' => 'Papel inválido. Use: gerente, garcom, chapeiro ou caixa.',
+            'papel.in' => 'Papel inválido. Use: gerente, garcom, chapeiro, caixa ou bar.',
         ];
     }
 }

@@ -1,4 +1,6 @@
-export type PapelUsuario = 'gerente' | 'garcom' | 'chapeiro' | 'caixa'
+export type PapelUsuario = 'gerente' | 'garcom' | 'chapeiro' | 'caixa' | 'bar' | 'mesa'
+
+export type Setor = 'cozinha' | 'bar'
 
 export interface Usuario {
   id: number
@@ -37,6 +39,18 @@ export interface Mesa {
   status: 'livre' | 'ocupada' | 'reservada'
   qr_code_token: string
   pedido_ativo: { id: number; status: string; total: number } | null
+  /** Conta em aberto da mesa (comanda). */
+  conta?: {
+    id: number
+    status: string
+    conta_solicitada: boolean
+    subtotal: number
+    restante: number
+    /** Maquininha pedida pelo tablet (ou aviso de pagar no caixa) esperando a equipe. */
+    pagamentos_pendentes: { id: number; metodo: 'pix' | 'maquininha' | 'caixa'; parte: number | null; valor: number }[]
+  } | null
+  garcom_chamado_em?: string | null
+  autoatendimento?: { ativo: boolean; login: string | null }
 }
 
 export type StatusPedido = 'aberto' | 'em_preparo' | 'pronto' | 'entregue' | 'cancelado'
@@ -50,6 +64,7 @@ export interface ItemPedido {
   preco_unitario: number
   subtotal: number
   status: StatusItemPedido
+  setor: Setor
   observacoes: string | null
 }
 
@@ -63,6 +78,15 @@ export interface Pedido {
   itens: ItemPedido[]
   criado_em: string
   atualizado_em: string
+  entregue_em?: string | null
+}
+
+/** Papéis que podem levar o pedido a cada status (espelha Pedido::PAPEIS_POR_STATUS na API). */
+export const PAPEIS_POR_STATUS: Partial<Record<StatusPedido, PapelUsuario[]>> = {
+  em_preparo: ['gerente', 'chapeiro', 'bar'],
+  pronto: ['gerente', 'chapeiro', 'bar'],
+  entregue: ['gerente', 'garcom'],
+  cancelado: ['gerente', 'garcom'],
 }
 
 export interface CartItem {

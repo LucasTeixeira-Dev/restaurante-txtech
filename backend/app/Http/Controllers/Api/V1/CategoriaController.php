@@ -22,6 +22,7 @@ class CategoriaController extends Controller
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:100', 'unique:categorias,nome'],
             'descricao' => ['nullable', 'string', 'max:255'],
+            'setor' => ['sometimes', Rule::in(Categoria::SETORES)],
             'ativo' => ['boolean'],
             'ordem' => ['integer', 'min:0'],
         ], [
@@ -44,6 +45,7 @@ class CategoriaController extends Controller
         $dados = $request->validate([
             'nome' => ['sometimes', 'string', 'max:100', Rule::unique('categorias', 'nome')->ignore($categoria->id)],
             'descricao' => ['nullable', 'string', 'max:255'],
+            'setor' => ['sometimes', Rule::in(Categoria::SETORES)],
             'ativo' => ['sometimes', 'boolean'],
             'ordem' => ['sometimes', 'integer', 'min:0'],
         ], [

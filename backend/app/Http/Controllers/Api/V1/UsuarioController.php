@@ -16,8 +16,12 @@ class UsuarioController extends Controller
     public function index(Request $request): JsonResponse
     {
         $usuarios = Usuario::with('roles')
-            ->when($request->filled('search'), fn($q) => $q->where('nome', 'like', "%{$request->search}%")
-                ->orWhere('email', 'like', "%{$request->search}%"))
+            // Logins de tablet (papel "mesa") são gerenciados na tela de Mesas.
+            ->whereDoesntHave('roles', fn($q) => $q->where('name', 'mesa'))
+            // Agrupado: sem o closure, o orWhere anulava os demais filtros (ex.: papel).
+            ->when($request->filled('search'), fn($q) => $q->where(fn($b) => $b
+                ->where('nome', 'like', "%{$request->search}%")
+                ->orWhere('email', 'like', "%{$request->search}%")))
             ->when($request->filled('papel'), fn($q) => $q->role($request->papel))
             ->orderBy('nome')
             ->paginate($request->input('per_page', 15));

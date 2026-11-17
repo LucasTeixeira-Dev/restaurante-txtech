@@ -20,9 +20,12 @@ class PedidoCriado implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [
-            new Channel('pedidos'),
-        ];
+        $canais = [new Channel('pedidos')];
+        if ($this->pedido->mesa_id) {
+            $canais[] = new Channel("mesa.{$this->pedido->mesa_id}");
+        }
+
+        return $canais;
     }
 
     public function broadcastAs(): string
@@ -50,6 +53,7 @@ class PedidoCriado implements ShouldBroadcast
                 'produto' => ['id' => $item->produto->id, 'nome' => $item->produto->nome],
                 'quantidade' => $item->quantidade,
                 'status' => $item->status,
+                'setor' => $item->setor,
                 'observacoes' => $item->observacoes,
             ]),
             'criado_em' => $this->pedido->created_at?->toIso8601String(),

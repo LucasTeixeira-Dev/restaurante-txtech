@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/Badge'
 import { useAuthStore } from '@/stores/authStore'
 import type { Categoria } from '@/types'
 
-const VAZIO = { nome: '', descricao: '', ativo: true, ordem: 0 }
+const VAZIO = { nome: '', descricao: '', setor: 'cozinha', ativo: true, ordem: 0 }
 
 export default function CategoriasPage() {
   const queryClient = useQueryClient()
@@ -54,7 +54,7 @@ export default function CategoriasPage() {
   }
 
   const abrirEditar = (c: Categoria) => {
-    setForm({ nome: c.nome, descricao: c.descricao ?? '', ativo: c.ativo, ordem: c.ordem })
+    setForm({ nome: c.nome, descricao: c.descricao ?? '', setor: c.setor, ativo: c.ativo, ordem: c.ordem })
     setModal({ open: true, categoria: c })
   }
 
@@ -103,6 +103,7 @@ export default function CategoriasPage() {
                 <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 w-8"></th>
                 <th className="text-left text-xs font-medium text-gray-500 px-5 py-3">Nome</th>
                 <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 hidden md:table-cell">Descrição</th>
+                <th className="text-left text-xs font-medium text-gray-500 px-5 py-3">Preparo</th>
                 <th className="text-left text-xs font-medium text-gray-500 px-5 py-3">Ordem</th>
                 <th className="text-left text-xs font-medium text-gray-500 px-5 py-3">Status</th>
                 {can(['gerente']) && (
@@ -119,6 +120,11 @@ export default function CategoriasPage() {
                   <td className="px-5 py-3 font-medium text-gray-900">{c.nome}</td>
                   <td className="px-5 py-3 text-gray-500 hidden md:table-cell max-w-xs truncate">
                     {c.descricao || <span className="text-gray-300">—</span>}
+                  </td>
+                  <td className="px-5 py-3">
+                    <Badge variant={c.setor === 'bar' ? 'info' : 'orange'}>
+                      {c.setor === 'bar' ? 'Bar' : 'Cozinha'}
+                    </Badge>
                   </td>
                   <td className="px-5 py-3 text-gray-500">{c.ordem}</td>
                   <td className="px-5 py-3">
@@ -191,6 +197,18 @@ export default function CategoriasPage() {
               onChange={(e) => setForm({ ...form, descricao: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">Preparado em</label>
+            <select
+              value={form.setor}
+              onChange={(e) => setForm({ ...form, setor: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="cozinha">Cozinha (KDS da cozinha)</option>
+              <option value="bar">Bar (KDS do bar)</option>
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Define em qual tela de preparo os itens desta categoria aparecem.</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

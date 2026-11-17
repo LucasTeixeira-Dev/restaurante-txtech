@@ -17,6 +17,8 @@ import CaixaPage from '@/pages/caixa/CaixaPage'
 import RelatoriosPage from '@/pages/relatorios/RelatoriosPage'
 import UsuariosPage from '@/pages/usuarios/UsuariosPage'
 import EstoquePage from '@/pages/estoque/EstoquePage'
+import AutoatendimentoPage from '@/pages/autoatendimento/AutoatendimentoPage'
+import ComprovantePage from '@/pages/caixa/ComprovantePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,9 +37,19 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
-          {/* KDS — tela full screen para chapeiro, sem o AppLayout sidebar */}
-          <Route element={<PrivateRoute papeis={['gerente', 'chapeiro']} />}>
+          {/* KDS — tela cheia para cozinha e bar, sem o AppLayout sidebar */}
+          <Route element={<PrivateRoute papeis={['gerente', 'chapeiro', 'bar']} />}>
             <Route path="/kds" element={<KdsPage />} />
+          </Route>
+
+          {/* Comprovante para impressão (sem menu) */}
+          <Route element={<PrivateRoute papeis={['gerente', 'caixa', 'garcom']} />}>
+            <Route path="/contas/:id/comprovante" element={<ComprovantePage />} />
+          </Route>
+
+          {/* Autoatendimento — tablet da mesa, tela cheia */}
+          <Route element={<PrivateRoute papeis={['mesa']} />}>
+            <Route path="/mesa" element={<AutoatendimentoPage />} />
           </Route>
 
           <Route element={<PrivateRoute />}>
@@ -51,7 +63,9 @@ export default function App() {
               </Route>
 
               {/* Pedidos */}
-              <Route path="/pedidos" element={<PedidosPage />} />
+              <Route element={<PrivateRoute papeis={['gerente', 'garcom', 'chapeiro', 'bar', 'caixa']} />}>
+                <Route path="/pedidos" element={<PedidosPage />} />
+              </Route>
               <Route
                 path="/pedidos/novo"
                 element={
