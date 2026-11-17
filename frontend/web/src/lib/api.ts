@@ -20,7 +20,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // 401 no próprio login é "senha errada", não sessão expirada: não desloga nem recarrega.
+    const ehLogin = String(error.config?.url ?? '').endsWith('/auth/login')
+    if (error.response?.status === 401 && !ehLogin) {
       useAuthStore.getState().logout()
       window.location.href = '/login'
     }

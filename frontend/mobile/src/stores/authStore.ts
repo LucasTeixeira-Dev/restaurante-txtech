@@ -18,6 +18,8 @@ const secureStorage = {
 interface AuthState {
   token: string | null
   usuario: Usuario | null
+  /** true quando o SecureStore terminou de carregar a sessão salva (leitura assíncrona). */
+  hidratado: boolean
   setAuth: (token: string, usuario: Usuario) => void
   logout: () => Promise<void>
   isAuthenticated: () => boolean
@@ -29,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       token: null,
       usuario: null,
+      hidratado: false,
 
       setAuth: (token, usuario) => set({ token, usuario }),
 
@@ -51,6 +54,10 @@ export const useAuthStore = create<AuthState>()(
       name: 'restaurante-auth',
       storage: createJSONStorage(() => secureStorage),
       partialize: (state) => ({ token: state.token, usuario: state.usuario }),
+      // Marca fim da leitura do SecureStore (inclusive em erro) para as telas decidirem a rota.
+      onRehydrateStorage: () => () => {
+        useAuthStore.setState({ hidratado: true })
+      },
     },
   ),
 )

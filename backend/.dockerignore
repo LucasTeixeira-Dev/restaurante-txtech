@@ -1,0 +1,7 @@
+# Link simbólico criado pelo storage:link dentro do container; quebra o build no Windows.
+public/storage
+.env
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*

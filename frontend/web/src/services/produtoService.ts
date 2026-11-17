@@ -28,10 +28,16 @@ export const produtoService = {
   },
 
   async atualizar(id: number, payload: FormData | Partial<Produto>): Promise<Produto> {
-    const isFormData = payload instanceof FormData
-    const { data } = await api.put<Produto>(`/produtos/${id}`, payload, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
-    })
+    // O PHP só interpreta multipart em POST: FormData vai como POST + _method=PUT
+    // (method spoofing do Laravel), senão campos e imagem chegam vazios.
+    if (payload instanceof FormData) {
+      if (!payload.has('_method')) payload.append('_method', 'PUT')
+      const { data } = await api.post<Produto>(`/produtos/${id}`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return data
+    }
+    const { data } = await api.put<Produto>(`/produtos/${id}`, payload)
     return data
   },
 
